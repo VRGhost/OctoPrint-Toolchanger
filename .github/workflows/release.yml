@@ -33,9 +33,7 @@ jobs:
         with:
           files: |
             dist/*.whl
-            dist/*.tar.gz
-            dist/*.zip
-          prerelease: ${{ contains(env.RELEASE_VERSION, 'dev') || contains(env.RELEASE_VERSION, 'pre') }}
+          prerelease: false
           name: ${{env.RELEASE_VERSION}}
           tag_name: ${{env.RELEASE_VERSION}}
       - name: Update stable-latest

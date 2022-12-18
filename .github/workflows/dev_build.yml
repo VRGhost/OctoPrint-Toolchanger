@@ -2,7 +2,8 @@ name: Build Dev Artifact
 on:
   push:
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+.[A-Za-z]+[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+.dev[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+.pre[0-9]+"
 
 jobs:
   test:
@@ -28,11 +29,11 @@ jobs:
           python -m build --outdir dist/
           # XXX: Generate legacy names (TODO: fix version check code in the plugin)
           cd dist && for l in $(ls -1 .); do cp $l $(echo $l | sed -e "s/-${TOOLCHANGER_PLUGIN_RELEASE_VERSION}/-v${TOOLCHANGER_PLUGIN_RELEASE_VERSION}/" ); done && cd ..
-      - name: Artifact
-        uses: actions/upload-artifact@v3
+      - name: Pre-release
+        uses: softprops/action-gh-release@v1
         with:
-          name: dev-build
-          path: |
+          files: |
             dist/*.whl
-            dist/*.tar.gz
-          retention-days: 14
+          prerelease: true
+          name: ${{env.TOOLCHANGER_PLUGIN_RELEASE_VERSION}}
+          tag_name: ${{env.TOOLCHANGER_PLUGIN_RELEASE_VERSION}}
