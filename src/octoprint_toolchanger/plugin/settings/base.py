@@ -1,6 +1,6 @@
 """Base settings binding class"""
 
-import octoprint
+import octoprint.settings
 
 
 class BoundSettings:
