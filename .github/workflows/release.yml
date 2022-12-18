@@ -1,67 +1,33 @@
 name: Release
 on:
-  workflow_dispatch:
-    inputs:
-      verson_part:
-        description: "Part of the version to bump."
-        required: true
-        default: dev
-        type: choice
-        options:
-          - dev
-          - patch
-          - minor
-          - major
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
-  tag-release:
-    runs-on: ubuntu-latest
-    outputs:
-      release-tag: ${{ steps.publish-git-tags.outputs.release_tag }}
-      release-version: ${{ steps.publish-git-tags.outputs.release_version }}
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.7'
-      - name: Install dependencies
-        run: pip install bump2version tox tox-gh-actions
-      - name: Bump version
-        id: apply_tags
-        run: |
-          git config --global user.email "github+actions@gmail.com"
-          git config --global user.name "Actions"
-          bump2version "${BUMPED_VERSION_PART}"
-        env:
-          BUMPED_VERSION_PART: ${{ github.event.inputs.verson_part }}
-      - name: Run tests
-        run: tox
-      - name: Push git tags
-        id: publish-git-tags
-        run: |
-          git config --global user.email "github+actions@gmail.com"
-          git config --global user.name "Actions"
-          git tag -f stable-latest
-          git push --tags --force
-          RELEASE_TAG=$(git tag --points-at HEAD | grep '^v' | sort -nr | head -n1)
-          echo ::set-output name=release_tag::${RELEASE_TAG}
-          echo ::set-output name=release_version::${RELEASE_TAG:1}  # same as 'tag' but without the 'v' prefix
+  test:
+    uses: "./.github/workflows/main.yml"
   publish-package:
+    needs: test
     runs-on: ubuntu-latest
-    needs: tag-release
     steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{needs.tag-release.outputs.release-tag}}
+      - uses: actions/checkout@v3
+      - name: Get Version number
+        run: |
+          export RELEASE_VERSION="${GITHUB_REF#refs/*/}"  # Generates output of the 'v0.12.9' format
+          export RELEASE_VERSION="${RELEASE_VERSION:1}"   # `:}"` -- remove the 'v' prefix
+          echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV
+          echo "Release version: ${RELEASE_VERSION}"
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.7'
       - name: Build packages
         run: |
           pip install build
           python -m build --outdir dist/
+          # XXX: Generate legacy names (TODO: fix version check code in the plugin)
+          cd dist && for l in $(ls -1 .); do cp $l $(echo $l | sed -e "s/-${RELEASE_VERSION}/-v${RELEASE_VERSION}/" ); done && cd ..
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
@@ -69,6 +35,10 @@ jobs:
             dist/*.whl
             dist/*.tar.gz
             dist/*.zip
-          prerelease: ${{ contains(needs.tag-release.outputs.release-tag, 'dev') || contains(needs.tag-release.outputs.release-tag, 'pre') }}
-          name: ${{needs.tag-release.outputs.release-version}}
-          tag_name: ${{needs.tag-release.outputs.release-version}}
+          prerelease: ${{ contains(env.RELEASE_VERSION, 'dev') || contains(env.RELEASE_VERSION, 'pre') }}
+          name: ${{env.RELEASE_VERSION}}
+          tag_name: ${{env.RELEASE_VERSION}}
+      - name: Update stable-latest
+        run: |
+          git tag -f stable-latest
+          git push --force origin stable-latest

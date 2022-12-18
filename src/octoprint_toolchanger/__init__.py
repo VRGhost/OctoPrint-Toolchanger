@@ -1,4 +1,6 @@
-__VERSION__ = "0.0.0"
+from importlib.metadata import version
+
+__VERSION__ = version("octoprint_toolchanger")
 __author__ = "Ilja Orlovs <vrghost@gmail.com>"
 __license__ = "MIT"
 __copyright__ = (
