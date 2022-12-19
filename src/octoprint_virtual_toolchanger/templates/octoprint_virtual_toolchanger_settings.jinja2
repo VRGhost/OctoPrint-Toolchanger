@@ -1,0 +1,15 @@
+<h3>Virtual Printer</h3>
+
+<form class="form-horizontal" onsubmit="return false;">
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: settings.plugins.octoprint_virtual_toolchanger.enabled"> {{ _('Enable the virtual printer') }}
+                <span class="help-block">{{ _('If enabled, an additional serial port <code>VIRTUAL_TOOLCHANGER</code> will be available for connecting, backed by a fake printer implementation. Useful for development.') }}</span>
+            </label>
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: settings.plugins.octoprint_virtual_toolchanger.hasChamber"> {{ _('Enable heated chamber') }}
+            </label>
+        </div>
+    </div>
+</form>

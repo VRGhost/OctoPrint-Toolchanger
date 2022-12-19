@@ -26,14 +26,17 @@ setuptools.setup(
     include_package_data=True,
     packages=setuptools.find_packages(where="src"),
     py_modules=[
-        "octoprint_toolchanger",
+        "octoprint_toolchanger", "octoprint_virtual_toolchanger"
     ],
     entry_points={
-        "octoprint.plugin": ["octoprint_toolchanger = octoprint_toolchanger"]
+        "octoprint.plugin": [
+            "octoprint_toolchanger = octoprint_toolchanger",
+            "octoprint_virtual_toolchanger = octoprint_virtual_toolchanger",
+        ]
     },
     install_requires=[
         "OctoPrint>=1.8.6",
-        "opencv-python>=4.5.5.62",
+        # "opencv-python>=4.5.5.62",
     ],
     python_requires=">=3.10",
 )

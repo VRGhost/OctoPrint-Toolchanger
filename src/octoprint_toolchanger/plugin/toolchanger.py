@@ -16,7 +16,11 @@ class Toolchanger(
     bound_settings: settings.v1.V1Settings = None
 
     def on_settings_migrate(self, target, current):
-        raise NotImplementedError
+        if current is None:
+            # No migration required
+            pass
+        else:
+            raise NotImplementedError((target, current))
 
     def get_settings_version(self) -> int:
         return self.bound_settings_cls.get_version()
